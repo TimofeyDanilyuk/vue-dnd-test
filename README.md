@@ -1,38 +1,36 @@
-# vue-dnd-test
+# Построение схем на Vue.js
 
-This template should help get you started developing with Vue 3 in Vite.
+Простой инструмент для проектирования схем. Позволяет выбирать элементы из боковой панели и расставлять их на рабочем полотне с автоматическим выравниванием.
 
-## Recommended IDE Setup
+## Особенности
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+* **Динамическая палитра**: Элементы подгружаются автоматически из папки `assets/palette/` (поддерживаются форматы PNG, JPG, SVG, WEBP).
+* **Drag-and-Drop**: Реализовано через `vue-draggable-plus`. При переносе создается копия объекта.
+* **Привязка к сетке**: Все объекты при добавлении магнитятся к сетке с шагом 100 пикселей.
+* **Корректные пропорции**: Изображения всегда остаются квадратными и не растягиваются, независимо от исходного размера файла.
+* **Dark UI**: Интерфейс выполнен в темных тонах с контрастной сеткой на холсте.
 
-## Recommended Browser Setup
+## Технический стек
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+* **Framework**: Vue 3 (Composition API)
+* **Library**: `vue-draggable-plus` (на базе Sortable.js)
 
-## Customize configuration
+## Установка и запуск
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+1.  Установите зависимости:
+    ```bash
+    npm install
+    ```
+2.  Поместите свои иконки в папку:
+    `src/assets/palette/`
+3.  Запустите сервер для разработки:
+    ```bash
+    npm run dev
+    ```
 
-## Project Setup
+## Как это работает
 
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+1.  **Загрузка**: При старте скрипт сканирует папку assets и формирует массив `palette`.
+2.  **Клонирование**: Функция `cloneItem` создает новый объект с уникальным ID через `crypto.randomUUID()`.
+3.  **Позиционирование**: Метод `handleDrop` ловит координаты курсора в момент отпускания мыши, вычитает отступы холста и округляет значения до ближайшего шага сетки (20px).
+4.  **Рендер**: Объекты отрисовываются на холсте через `absolute positioning`.
