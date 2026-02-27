@@ -26,7 +26,10 @@
           <h1 class="topbar-title">Полотно</h1>
           <div class="count-badge">Всего: {{ nodes.length }}</div>
         </div>
-        <button class="btn-clear" @click="nodes = []">Очистить</button>
+        <div class="topbar-actions">
+          <button class="btn-download" @click="downloadScheme">💾 Сохранить PNG</button>
+          <button class="btn-clear" @click="nodes = []">🗑️ Очистить</button>
+        </div>
       </header>
 
       <div ref="canvasEl" class="canvas-wrapper">
@@ -60,6 +63,7 @@
 <script setup>
 import { ref } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
+import { toPng } from 'html-to-image';
 
 const canvasEl = ref(null);
 const nodes = ref([]);
@@ -113,6 +117,27 @@ function handleDrop(evt) {
     }
   });
 }
+
+// Функция для скачивания
+const downloadScheme = async () => {
+  const el = canvasEl.value;
+  
+  if (!el) return;
+
+  try {
+    const dataUrl = await toPng(el, {
+      cacheBust: true,
+    });
+
+    const link = document.createElement('a');
+    link.download = `схема-${Date.now()}.png`;
+    link.href = dataUrl;
+    
+    link.click();
+  } catch (err) {
+    console.error('Что-то пошло не так при создании PNG:', err);
+  }
+};
 </script>
 
 <style>
@@ -214,12 +239,24 @@ html, body, #app {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid #ef4444;
-  padding: 5px 12px;
+  padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-clear:hover { background: #ef4444; color: white; }
+
+.btn-download {
+  background: rgba(239, 68, 68, 0.1);
+  color: #26d14b;
+  border: 1px solid #26d14b;
+  padding: 10px 20px;
+  margin-right: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-download:hover { background: #26d14b; color: white; }
 
 .canvas-wrapper {
   flex: 1;
