@@ -47,8 +47,10 @@
             :key="n.id"
             class="node-element"
             :style="{ left: n.x + 'px', top: n.y + 'px' }"
+            @click="deleteNode(n.id)" 
           >
             <img :src="n.src" class="thumb-canvas" draggable="false" />
+            <div class="delete-icon">×</div>
           </div>
         </VueDraggable>
 
@@ -138,6 +140,16 @@ const downloadScheme = async () => {
     console.error('Что-то пошло не так при создании PNG:', err);
   }
 };
+
+const deleteNode = async (id) => {
+  if(id == 0) return;
+
+  try{
+    nodes.value = nodes.value.filter(n => n.id !== id);
+  } catch(err){
+    console.error('Что-то пошло не так во время удаления.');
+  }
+};
 </script>
 
 <style>
@@ -184,7 +196,7 @@ html, body, #app {
 }
 
 .palette-item {
-  background: #1a1f2e;
+  background: transparent;
   border: 1px solid #2d3446;
   border-radius: 6px;
   padding: 8px;
@@ -197,7 +209,6 @@ html, body, #app {
 
 .palette-item:hover {
   border-color: #3b82f6;
-  background: #252b3d;
 }
 
 .thumb {
@@ -277,6 +288,34 @@ html, body, #app {
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+node-element:hover {
+  border-color: #ef4444; /* Подсвечиваем красным при наведении */
+  transform: scale(1.05);
+}
+
+.delete-icon {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.node-element:hover .delete-icon {
+  opacity: 1; 
 }
 
 .thumb-canvas {
