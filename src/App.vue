@@ -2,7 +2,10 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2 class="sidebar-title">Палитра</h2>
+        <div class="sidebar-title-row">
+          <img src="/icon.png" class="sidebar-icon" alt="" />
+          <h2 class="sidebar-title">Палитра</h2>
+        </div>
       </div>
 
       <VueDraggable
@@ -292,8 +295,8 @@ html, body, #app {
   transition: transform 0.1s;
 }
 
-node-element:hover {
-  border-color: #ef4444; /* Подсвечиваем красным при наведении */
+.node-element:hover {
+  border-color: #ef4444;
   transform: scale(1.05);
 }
 
@@ -337,5 +340,23 @@ node-element:hover {
   justify-content: center;
   color: #94a3b8;
   pointer-events: none;
+}
+
+.sidebar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  object-fit: contain;
+
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
 }
 </style>
