@@ -14,11 +14,13 @@
         :sort="false"
         :clone="cloneItem"
         item-key="id"
+        :force-fallback="true"
+        fallback-class="sortable-fallback"
         class="palette-list"
-        tag="div"
       >
         <div v-for="it in palette" :key="it.id" class="palette-item">
           <img :src="it.src" class="thumb" />
+          <div class="size-tag">{{ it.w }}x{{ it.h }}</div>
         </div>
       </VueDraggable>
     </aside>
@@ -41,15 +43,20 @@
           :group="{ name: 'scheme', put: true }"
           :sort="false"
           item-key="id"
+          :force-fallback="true"
           @add="handleDrop"
           class="canvas-area"
-          tag="div"
         >
           <div
             v-for="n in nodes"
             :key="n.id"
             class="node-element"
-            :style="{ left: n.x + 'px', top: n.y + 'px' }"
+            :style="{ 
+              left: n.x + 'px', 
+              top: n.y + 'px',
+              width: n.w + 'px',
+              height: n.h + 'px'
+            }"
             @click="deleteNode(n.id)" 
           >
             <img :src="n.src" class="thumb-canvas" draggable="false" />
@@ -66,27 +73,46 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { toPng } from 'html-to-image';
 
+const GRID_STEP = 80;
 const canvasEl = ref(null);
 const nodes = ref([]);
-const palette = ref([]);
 
-// берем картинки из папки
+// 1. Сначала импортируем файлы
 const files = import.meta.glob("@/assets/palette/*.{png,jpg,jpeg,webp,svg,gif}", {
   eager: true,
   import: "default",
 });
 
-// заполняем список палитры
-palette.value = Object.entries(files).map(([path, url]) => ({
+// 2. Сразу создаем палитру, чтобы Draggable увидел элементы при старте
+const palette = ref(Object.entries(files).map(([path, url]) => ({
   id: path,
-  src: url
-}));
+  src: url,
+  w: 80,
+  h: 80
+})));
 
-// создаем копию объекта для холста
+const getImageSize = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ w: GRID_STEP, h: GRID_STEP });
+    img.src = url;
+  });
+};
+
+// 3. Догружаем реальные размеры
+onMounted(async () => {
+  for (const item of palette.value) {
+    const size = await getImageSize(item.src);
+    item.w = size.w;
+    item.h = size.h;
+  }
+});
+
 function cloneItem(item) {
   return {
     ...item,
@@ -96,62 +122,47 @@ function cloneItem(item) {
   };
 }
 
-const GRID_STEP = 100; // Шаг сетки в пикселях
-
-// считаем координаты при дропе с привязкой к сетке
 function handleDrop(evt) {
   const e = evt.originalEvent;
   const box = canvasEl.value?.getBoundingClientRect();
-
   if (!e || !box) return;
 
-  const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-  const clientY = e.touches?.[0]?.clientY ?? e.clientY;
-
+  const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+  const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
+  
   const index = evt.newIndex;
   
-  // ставим координаты в массив с округлением до шага сетки
-  requestAnimationFrame(() => {
+  // Даем Vue время добавить элемент в массив nodes
+  setTimeout(() => {
     const item = nodes.value[index];
     if (item) {
-      const rawX = clientX - box.left - 40; 
-      const rawY = clientY - box.top - 40;
+      const rawX = clientX - box.left - (item.w / 2);
+      const rawY = clientY - box.top - (item.h / 2);
 
       item.x = Math.round(rawX / GRID_STEP) * GRID_STEP;
       item.y = Math.round(rawY / GRID_STEP) * GRID_STEP;
     }
-  });
+  }, 0);
 }
 
-// Функция для скачивания
 const downloadScheme = async () => {
-  const el = canvasEl.value;
-  
-  if (!el) return;
-
+  if (!canvasEl.value) return;
   try {
-    const dataUrl = await toPng(el, {
+    const dataUrl = await toPng(canvasEl.value, { 
       cacheBust: true,
+      backgroundColor: '#090b10' 
     });
-
     const link = document.createElement('a');
     link.download = `схема-${Date.now()}.png`;
     link.href = dataUrl;
-    
     link.click();
   } catch (err) {
-    console.error('Что-то пошло не так при создании PNG:', err);
+    console.error('Ошибка PNG:', err);
   }
 };
 
-const deleteNode = async (id) => {
-  if(id == 0) return;
-
-  try{
-    nodes.value = nodes.value.filter(n => n.id !== id);
-  } catch(err){
-    console.error('Что-то пошло не так во время удаления.');
-  }
+const deleteNode = (id) => {
+  nodes.value = nodes.value.filter(n => n.id !== id);
 };
 </script>
 
@@ -161,15 +172,15 @@ html, body, #app {
   height: 100vh; width: 100vw;
   overflow: hidden;
   font-family: sans-serif;
-  background: #090b10;
-  color: #e0e6ed;
+  background: #18181b; /* Мягкий темный */
+  color: #d4d4d8;
 }
 </style>
 
 <style scoped>
 .app-container {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 180px 1fr;
   height: 100vh;
 }
 
@@ -185,51 +196,53 @@ html, body, #app {
   border-bottom: 1px solid #2d3446;
 }
 
-.sidebar-title {
-  margin: 0; font-size: 16px;
-}
+.sidebar-title { margin: 0; font-size: 16px; }
 
 .palette-list {
   flex: 1; overflow-y: auto;
   padding: 10px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
   align-content: start;
 }
 
 .palette-item {
-  background: transparent;
+  background: #1a1f2e;
   border: 1px solid #2d3446;
   border-radius: 6px;
   padding: 8px;
   cursor: grab;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: relative;
   aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.palette-item:hover {
-  border-color: #3b82f6;
+.size-tag {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 8px;
+  color: #64748b;
 }
 
 .thumb {
   max-width: 100%;
   max-height: 100%;
-  width: auto;
-  height: auto; 
   object-fit: contain; 
 }
 
 .main-content {
   display: flex;
   flex-direction: column;
-  background: #090b10;
+  background: gray;
 }
 
 .topbar {
-  height: 50px;
+  height: 62px;
   background: #11141f;
   border-bottom: 1px solid #2d3446;
   padding: 0 20px;
@@ -253,57 +266,69 @@ html, body, #app {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid #ef4444;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
 }
-
-.btn-clear:hover { background: #ef4444; color: white; }
 
 .btn-download {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(38, 209, 75, 0.1);
   color: #26d14b;
   border: 1px solid #26d14b;
-  padding: 10px 20px;
-  margin-right: 15px;
+  padding: 8px 16px;
+  margin-right: 10px;
   border-radius: 4px;
   cursor: pointer;
 }
-
-.btn-download:hover { background: #26d14b; color: white; }
 
 .canvas-wrapper {
   flex: 1;
   position: relative;
-  background-image: radial-gradient(#3d475c 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, #1a1f2e 1px, transparent 1px),
+    linear-gradient(to bottom, #1a1f2e 1px, transparent 1px);
+  background-size: 80px 80px; 
+  overflow: auto;
 }
 
-.canvas-area { width: 100%; height: 100%; position: relative; }
+.canvas-area { 
+  width: 100%;
+  height: 100%; 
+  position: absolute; 
+  top: 0;
+  left: 0;
+}
+
+.sortable-ghost {
+  opacity: 0 !important;
+}
+
+.sortable-fallback {
+  opacity: 1 !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
 
 .node-element {
   position: absolute;
   background: #1a1f2e;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 4px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.1s;
+  border-radius: 4px;
+  padding: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  cursor: move;
+  box-sizing: border-box;
+  user-select: none;
 }
 
 .node-element:hover {
-  border-color: #ef4444;
-  transform: scale(1.05);
+  border-color: #3b82f6;
+  z-index: 1;
 }
 
 .delete-icon {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -10px;
+  right: -10px;
   background: #ef4444;
   color: white;
   width: 20px;
@@ -314,49 +339,33 @@ html, body, #app {
   justify-content: center;
   font-size: 14px;
   opacity: 0;
-  transition: opacity 0.2s;
+  cursor: pointer;
+  z-index: 11;
 }
 
-.node-element:hover .delete-icon {
-  opacity: 1; 
-}
+.node-element:hover .delete-icon { opacity: 1; }
 
 .thumb-canvas {
-  width: 80px; 
-  height: 80px;
+  width: 100%;
+  height: 100%;
   display: block;
-  object-fit: contain;
-}
-
-.node-img {
-  display: none;
+  object-fit: fill;
 }
 
 .empty-msg {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  inset: 240px 0 0 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #475569;
   pointer-events: none;
 }
 
-.sidebar-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+.sidebar-title-row { display: flex; align-items: center; gap: 8px; }
 .sidebar-icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  object-fit: contain;
-
-  padding: 4px;
-  border-radius: 8px;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  width: 24px; height: 24px;
+  padding: 4px; border-radius: 6px;
+  background: rgba(59, 130, 246, 0.1);
 }
 </style>
