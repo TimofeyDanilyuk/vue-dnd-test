@@ -232,16 +232,26 @@ function isAreaOccupied(x, y, w, h, excludeId = null) {
 
 // Поиск свободного места
 function findFreeSpot(startX, startY, w, h) {
-  let offset = 1;
-  while (offset < 10) {
-    const directions = [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
-    for (let [dx, dy] of directions) {
-      let testX = startX + (dx * offset * GRID_STEP);
-      let testY = startY + (dy * offset * GRID_STEP);
-      if (testX >= 0 && testY >= 0 && !isAreaOccupied(testX, testY, w, h)) return { x: testX, y: testY };
+  const visited = new Set();
+  const queue = [{ x: startX, y: startY }];
+
+  while (queue.length) {
+    const { x, y } = queue.shift();
+    const key = `${x},${y}`;
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    if (x >= 0 && y >= 0 && !isAreaOccupied(x, y, w, h)) {
+      return { x, y };
     }
-    offset++;
+
+    for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1]]) {
+      queue.push({ x: x + dx * GRID_STEP, y: y + dy * GRID_STEP });
+    }
+
+    if (visited.size > 200) break; 
   }
+
   return { x: startX, y: startY };
 }
 
