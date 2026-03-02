@@ -7,5 +7,12 @@ public class PaletteItem
     public string ImageUrl { get; set; } = string.Empty;
     public int Width { get; set; }
     public int Height { get; set; }
-    // public int UserId {get;set;}
+    
+    public Guid UserId { get; set; }
+    public User? User { get; set; }
+
+    public PaletteItem()
+    {
+        
+    }
 }

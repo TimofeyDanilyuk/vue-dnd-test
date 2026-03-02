@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,9 @@ namespace server.Controllers
     [Route("api/[controller]")]
     public class PaletteController : ControllerBase
     {
+        private Guid GetUserId() =>
+                Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
 
@@ -26,7 +30,9 @@ namespace server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaletteItem>>> GetPalette()
         {
-            return await _context.PaletteItems.ToListAsync();
+            return await _context.PaletteItems
+                .Where(p => p.UserId == GetUserId())
+                .ToListAsync();
         }
 
         // Метод для загрузки новой картинки
@@ -53,7 +59,8 @@ namespace server.Controllers
                 Name = name,
                 ImageUrl = $"/uploads/{fileName}",
                 Width = w,
-                Height = h
+                Height = h,
+                UserId = GetUserId()
             };
 
             _context.PaletteItems.Add(newItem);
