@@ -45,6 +45,7 @@
           item-key="id"
           :force-fallback="true"
           @add="handleDrop"
+          @end="handleMove"
           class="canvas-area"
         >
           <div
@@ -132,15 +133,20 @@ function handleDrop(evt) {
   
   const index = evt.newIndex;
   
-  // Даем Vue время добавить элемент в массив nodes
   setTimeout(() => {
     const item = nodes.value[index];
     if (item) {
-      const rawX = clientX - box.left - (item.w / 2);
-      const rawY = clientY - box.top - (item.h / 2);
+      let rawX = Math.round((clientX - box.left - (item.w / 2)) / GRID_STEP) * GRID_STEP;
+      let rawY = Math.round((clientY - box.top - (item.h / 2)) / GRID_STEP) * GRID_STEP;
 
-      item.x = Math.round(rawX / GRID_STEP) * GRID_STEP;
-      item.y = Math.round(rawY / GRID_STEP) * GRID_STEP;
+      if (isAreaOccupied(rawX, rawY, item.w, item.h, item.id)) {
+        const freeSpot = findFreeSpot(rawX, rawY, item.w, item.h);
+        item.x = freeSpot.x;
+        item.y = freeSpot.y;
+      } else {
+        item.x = rawX;
+        item.y = rawY;
+      }
     }
   }, 0);
 }
@@ -164,6 +170,75 @@ const downloadScheme = async () => {
 const deleteNode = (id) => {
   nodes.value = nodes.value.filter(n => n.id !== id);
 };
+
+// Проверка на занятость клетки
+function isAreaOccupied(x, y, w, h, excludeId = null) {
+  return nodes.value.some(node => {
+    if (excludeId && node.id === excludeId) return false;
+    
+    return (
+      x < node.x + node.w &&
+      x + w > node.x &&
+      y < node.y + node.h &&
+      y + h > node.y
+    );
+  });
+}
+
+// Поиск свободного места
+function findFreeSpot(startX, startY, w, h) {
+  let newX = startX;
+  let newY = startY;
+  let offset = 1;
+
+  while (isAreaOccupied(newX, newY, w, h) && offset < 10) {
+    const directions = [
+      [1, 0], [0, 1], [-1, 0], [0, -1],
+      [1, 1], [-1, 1], [1, -1], [-1, -1]
+    ];
+
+    for (let [dx, dy] of directions) {
+      let testX = startX + (dx * offset * GRID_STEP);
+      let testY = startY + (dy * offset * GRID_STEP);
+      
+      if (!isAreaOccupied(testX, testY, w, h)) {
+        return { x: testX, y: testY };
+      }
+    }
+    offset++;
+  }
+  return { x: newX, y: newY };
+}
+
+// функция для позиционирования элемента
+function positionItem(item, clientX, clientY, box) {
+  let rawX = Math.round((clientX - box.left - (item.w / 2)) / GRID_STEP) * GRID_STEP;
+  let rawY = Math.round((clientY - box.top - (item.h / 2)) / GRID_STEP) * GRID_STEP;
+
+  rawX = Math.max(0, rawX);
+  rawY = Math.max(0, rawY);
+
+  if (isAreaOccupied(rawX, rawY, item.w, item.h, item.id)) {
+    const freeSpot = findFreeSpot(rawX, rawY, item.w, item.h);
+    item.x = freeSpot.x;
+    item.y = freeSpot.y;
+  } else {
+    item.x = rawX;
+    item.y = rawY;
+  }
+}
+
+function handleMove(evt) {
+  const e = evt.originalEvent;
+  const box = canvasEl.value?.getBoundingClientRect();
+  if (!e || !box) return;
+
+  const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+  const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
+
+  const item = nodes.value[evt.newIndex];
+  if (item) positionItem(item, clientX, clientY, box);
+}
 </script>
 
 <style>
