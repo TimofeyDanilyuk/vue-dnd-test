@@ -85,9 +85,8 @@ import { toPng } from 'html-to-image';
 import axios from "axios";
 
 // Связь с бэкендом
-const PORT = "5204"; // Порт сервера
-const API_URL = `http://localhost:${PORT}/api/palette`;
-const IMAGE_BASE = `http://localhost:${PORT}`;
+const API_URL = `/api/palette`
+const IMAGE_BASE = ``
 
 const GRID_STEP = 80;
 const canvasEl = ref(null);

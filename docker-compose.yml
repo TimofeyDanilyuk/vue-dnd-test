@@ -1,0 +1,18 @@
+services:
+  server:
+    build: ./server
+    container_name: scheme-server
+    volumes:
+      - ./server/wwwroot/uploads:/app/wwwroot/uploads
+      - ./server/scheme.db:/app/scheme.db
+    environment:
+      - ASPNETCORE_URLS=http://+:5204
+      - ASPNETCORE_ENVIRONMENT=Production
+
+  client:
+    build: ./client
+    container_name: scheme-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server

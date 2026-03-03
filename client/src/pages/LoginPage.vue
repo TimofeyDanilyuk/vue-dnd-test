@@ -68,7 +68,7 @@ const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
 
-const API = 'http://localhost:5204/api/auth'
+const API = '/api/auth'
 
 const submit = async () => {
   error.value = ''
