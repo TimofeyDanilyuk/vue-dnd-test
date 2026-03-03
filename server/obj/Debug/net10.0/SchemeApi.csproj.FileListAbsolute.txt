@@ -8,7 +8,6 @@ C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\SchemeApi.runtimeconfig.js
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\SchemeApi.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\SchemeApi.pdb
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Humanizer.dll
-C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.Build.Framework.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.CodeAnalysis.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.CodeAnalysis.CSharp.dll
@@ -163,3 +162,5 @@ C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.IdentityModel.Pr
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\daniliuk\scheme-app\server\bin\Debug\net10.0\SchemeApi.xml
+C:\Users\daniliuk\scheme-app\server\obj\Debug\net10.0\SchemeApi.xml

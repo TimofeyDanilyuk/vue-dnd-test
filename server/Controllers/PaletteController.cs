@@ -10,6 +10,9 @@ using server.Models;
 
 namespace server.Controllers
 {
+    /// <summary>
+    /// Управление палитрой элементов пользователя
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class PaletteController : ControllerBase
@@ -26,7 +29,10 @@ namespace server.Controllers
             _env = env;
         }
 
-        // Получение всех элементов палитры из базы
+        /// <summary>Получить все элементы палитры текущего пользователя</summary>
+        /// <returns>Список элементов палитры</returns>
+        /// <response code="200">Список элементов</response>
+        /// <response code="401">Не авторизован</response>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaletteItem>>> GetPalette()
         {
@@ -35,7 +41,15 @@ namespace server.Controllers
                 .ToListAsync();
         }
 
-        // Метод для загрузки новой картинки
+        /// <summary>Загрузить новое изображение в палитру</summary>
+        /// <param name="file">Файл изображения (PNG, JPG, SVG, WEBP)</param>
+        /// <param name="name">Название элемента</param>
+        /// <param name="w">Ширина на сетке (кратно 80)</param>
+        /// <param name="h">Высота на сетке (кратно 80)</param>
+        /// <returns>Созданный элемент палитры</returns>
+        /// <response code="200">Элемент успешно создан</response>
+        /// <response code="400">Файл не выбран</response>
+        /// <response code="401">Не авторизован</response>
         [HttpPost("upload")]
         public async Task<IActionResult> UploadImage(IFormFile file, [FromForm] string name, [FromForm] int w, [FromForm] int h)
         {
@@ -67,6 +81,33 @@ namespace server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(newItem);
+        }
+
+        /// <summary>Удалить элемент из палитры</summary>
+        /// <param name="id">ID элемента</param>
+        /// <response code="204">Элемент удалён</response>
+        /// <response code="404">Элемент не найден</response>
+        /// <response code="401">Не авторизован</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> DeleteItem(Guid id)
+        {
+            var item = await _context.PaletteItems
+                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == GetUserId());
+
+            if (item == null) return NotFound();
+
+            // Удаляем файл с диска
+            var filePath = Path.Combine(_env.ContentRootPath, "wwwroot", item.ImageUrl.TrimStart('/'));
+            if (System.IO.File.Exists(filePath))
+                System.IO.File.Delete(filePath);
+
+            _context.PaletteItems.Remove(item);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

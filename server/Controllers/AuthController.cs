@@ -13,6 +13,9 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace server.Controllers
 {
+    /// <summary>
+    /// Управление аутентификацией пользователя
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -26,6 +29,11 @@ namespace server.Controllers
             _config = config;
         }
 
+        /// <summary>Регистрация нового пользователя</summary>
+        /// <param name="dto">Email и пароль</param>
+        /// <returns>JWT токен</returns>
+        /// <response code="200">Пользователь создан, возвращает токен</response>
+        /// <response code="400">Пользователь с таким email уже существует</response>
         // POST /api/auth/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AuthDto dto)
@@ -42,9 +50,15 @@ namespace server.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { token = GenerateToken(user) });
+            return Ok(new TokenResponse { Token = GenerateToken(user) });
         }
 
+
+        /// <summary>Вход в аккаунт</summary>
+        /// <param name="dto">Email и пароль</param>
+        /// <returns>JWT токен</returns>
+        /// <response code="200">Успешный вход, возвращает токен</response>
+        /// <response code="401">Неверный email или пароль</response>
         // POST /api/auth/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AuthDto dto)
@@ -54,7 +68,7 @@ namespace server.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return Unauthorized("Неверный email или пароль");
 
-            return Ok(new { token = GenerateToken(user) });
+            return Ok(new TokenResponse { Token = GenerateToken(user) });
         }
 
         private string GenerateToken(User user)
@@ -66,9 +80,9 @@ namespace server.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
@@ -82,9 +96,29 @@ namespace server.Controllers
         }
     }
 
+    /// <summary>Данные для входа или регистрации</summary>
     public class AuthDto
     {
+        /// <summary>
+        /// Email пользователя
+        /// </summary>
+        /// <example>
+        /// user@example.com
+        /// </example>
         public string Email { get; set; } = string.Empty;
+        /// <summary>
+        /// Пароль
+        /// </summary>
+        /// <example>
+        /// qwerty123
+        /// </example>
         public string Password { get; set; } = string.Empty;
+    }
+
+    /// <summary>Ответ с JWT токеном</summary>
+    public class TokenResponse
+    {
+        /// <summary>JWT токен для авторизации</summary>
+        public string Token { get; set; } = string.Empty;
     }
 }

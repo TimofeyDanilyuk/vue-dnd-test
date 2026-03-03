@@ -27,6 +27,7 @@
         <div v-for="element in palette" :key="element.id" class="palette-item">
           <img :src="element.src" class="thumb" />
           <div class="size-tag">{{ element.w }}x{{ element.h }}</div>
+          <div class="delete-palette-icon" @click.stop="deletePaletteItem(element.id)">×</div>
         </div>
       </VueDraggable>
     </aside>
@@ -272,6 +273,16 @@ const downloadScheme = async () => {
 const deleteNode = (id) => {
   nodes.value = nodes.value.filter(n => n.id !== id);
 };
+
+// Удаление элемента в палитре
+const deletePaletteItem = async (id) => {
+  try {
+    await axios.delete(`${API_URL}/${id}`)
+    palette.value = palette.value.filter(p => p.id !== id)
+  } catch (err) {
+    console.error('Ошибка при удалении:', err)
+  }
+}
 </script>
 
 <style scoped>
@@ -414,6 +425,29 @@ const deleteNode = (id) => {
   width: 18px; height: 18px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; opacity: 0; cursor: pointer;
+}
+
+/* Стиль иконки удаления элемента палитры */
+.delete-palette-icon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.palette-item:hover .delete-palette-icon {
+  opacity: 1;
 }
 
 .node-element:hover .delete-icon { opacity: 1; }

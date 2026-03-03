@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SchemeApi</name>
+    </assembly>
+    <members>
+        <member name="T:server.Controllers.AuthController">
+            <summary>
+            Управление аутентификацией пользователя
+            </summary>
+        </member>
+        <member name="M:server.Controllers.AuthController.Register(server.Controllers.AuthDto)">
+            <summary>Регистрация нового пользователя</summary>
+            <param name="dto">Email и пароль</param>
+            <returns>JWT токен</returns>
+            <response code="200">Пользователь создан, возвращает токен</response>
+            <response code="400">Пользователь с таким email уже существует</response>
+        </member>
+        <member name="M:server.Controllers.AuthController.Login(server.Controllers.AuthDto)">
+            <summary>Вход в аккаунт</summary>
+            <param name="dto">Email и пароль</param>
+            <returns>JWT токен</returns>
+            <response code="200">Успешный вход, возвращает токен</response>
+            <response code="401">Неверный email или пароль</response>
+        </member>
+        <member name="T:server.Controllers.AuthDto">
+            <summary>Данные для входа или регистрации</summary>
+        </member>
+        <member name="P:server.Controllers.AuthDto.Email">
+            <summary>
+            Email пользователя
+            </summary>
+            <example>
+            user@example.com
+            </example>
+        </member>
+        <member name="P:server.Controllers.AuthDto.Password">
+            <summary>
+            Пароль
+            </summary>
+            <example>
+            qwerty123
+            </example>
+        </member>
+        <member name="T:server.Controllers.TokenResponse">
+            <summary>Ответ с JWT токеном</summary>
+        </member>
+        <member name="P:server.Controllers.TokenResponse.Token">
+            <summary>JWT токен для авторизации</summary>
+        </member>
+        <member name="T:server.Controllers.PaletteController">
+            <summary>
+            Управление палитрой элементов пользователя
+            </summary>
+        </member>
+        <member name="M:server.Controllers.PaletteController.GetPalette">
+            <summary>Получить все элементы палитры текущего пользователя</summary>
+            <returns>Список элементов палитры</returns>
+            <response code="200">Список элементов</response>
+            <response code="401">Не авторизован</response>
+        </member>
+        <member name="M:server.Controllers.PaletteController.UploadImage(Microsoft.AspNetCore.Http.IFormFile,System.String,System.Int32,System.Int32)">
+            <summary>Загрузить новое изображение в палитру</summary>
+            <param name="file">Файл изображения (PNG, JPG, SVG, WEBP)</param>
+            <param name="name">Название элемента</param>
+            <param name="w">Ширина на сетке (кратно 80)</param>
+            <param name="h">Высота на сетке (кратно 80)</param>
+            <returns>Созданный элемент палитры</returns>
+            <response code="200">Элемент успешно создан</response>
+            <response code="400">Файл не выбран</response>
+            <response code="401">Не авторизован</response>
+        </member>
+        <member name="M:server.Controllers.PaletteController.DeleteItem(System.Guid)">
+            <summary>Удалить элемент из палитры</summary>
+            <param name="id">ID элемента</param>
+            <response code="204">Элемент удалён</response>
+            <response code="404">Элемент не найден</response>
+            <response code="401">Не авторизован</response>
+        </member>
+        <member name="T:SchemeApi.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SchemeApi.Migrations.AddUsers">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.AddUsers.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.AddUsers.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SchemeApi.Migrations.AddUsers.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>
